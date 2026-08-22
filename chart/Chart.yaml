@@ -1,0 +1,6 @@
+apiVersion: v2
+name: sport-api
+description: Chart de Helm para sport-api, microservicio de retos deportivos (plataforma juan-in-one)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

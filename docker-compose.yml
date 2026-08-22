@@ -1,0 +1,31 @@
+# Solo para desarrollo local rápido, antes de tener el clúster de Kubernetes con
+# el Postgres compartido de la plataforma (ver wiki/projects/juan-in-one.md).
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: sport_api
+      POSTGRES_PASSWORD: sport_api
+      POSTGRES_DB: sport_api
+    ports:
+      - "5433:5432"
+    volumes:
+      - sport_api_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sport_api"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+asyncpg://sport_api:sport_api@db:5432/sport_api
+    ports:
+      - "8001:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  sport_api_db:

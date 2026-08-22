@@ -1,0 +1,51 @@
+image:
+  repository: ghcr.io/juan-in-one/sport-api
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+# Vacío por defecto (útil en local con imagen ya cargada). En real, ArgoCD lo
+# rellena con un Secret dockerconfigjson creado aparte en el clúster (no en
+# Git) — ver gitops/apps/sport-api.yaml.
+imagePullSecrets: []
+
+# Ignorado si autoscaling.enabled es true (el HPA manda en ese caso)
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 8000
+
+ingress:
+  enabled: true
+  className: nginx
+  host: sport-api.local
+  path: /
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+
+# Hardening pedido por Trivy config (KSV-0001/0003/0004/0012/0014/0020/0021/
+# 0030/0104/0106/0118) — mismo UID/GID que crea el Dockerfile (10001).
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
