@@ -45,3 +45,12 @@ async def get_challenge(challenge_id: uuid.UUID, db: AsyncSession = Depends(get_
     if challenge is None:
         raise HTTPException(status_code=404, detail="Challenge not found")
     return challenge
+
+
+@app.delete("/challenges/{challenge_id}", status_code=204)
+async def delete_challenge(challenge_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> None:
+    challenge = await db.get(Challenge, challenge_id)
+    if challenge is None:
+        raise HTTPException(status_code=404, detail="Challenge not found")
+    await db.delete(challenge)
+    await db.commit()
