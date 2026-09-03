@@ -1,0 +1,20 @@
+{{- if .Values.metrics.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "sport-api.fullname" . }}
+  labels:
+    {{- include "sport-api.labels" . | nindent 4 }}
+    # Obligatorio: el Prometheus del clúster solo hace caso a los
+    # ServiceMonitor con esta etiqueta exacta (serviceMonitorSelector.
+    # matchLabels) — ver car-api/chart/templates/servicemonitor.yaml y
+    # wiki/log.md 2026-09-01.
+    release: monitoring
+spec:
+  selector:
+    matchLabels:
+      {{- include "sport-api.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: http
+      path: /metrics
+{{- end }}

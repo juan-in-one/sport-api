@@ -1,6 +1,12 @@
 import uuid
 
 from fastapi import Depends, FastAPI, HTTPException
+from opentelemetry import metrics
+from opentelemetry.exporter.prometheus import PrometheusMetricReader
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.resources import Resource
+from prometheus_client import make_asgi_app
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,6 +16,29 @@ from app.models import Challenge
 from app.schemas import ChallengeCreate, ChallengeOut
 
 app = FastAPI(title=settings.app_name)
+
+# Métricas de aplicación con OpenTelemetry — mismo patrón que car-api (ver
+# app/main.py allí y wiki/log.md 2026-09-03 para el porqué de cada pieza).
+metrics.set_meter_provider(
+    MeterProvider(
+        metric_readers=[PrometheusMetricReader()],
+        resource=Resource.create({"service.name": "sport-api"}),
+    )
+)
+meter = metrics.get_meter("sport-api")
+
+# excluded_urls: /health (sondas de Kubernetes) y /metrics (el propio
+# Prometheus scrapeándose a sí mismo) no son tráfico de negocio real — ver el
+# hallazgo real en car-api (log.md 2026-09-03) antes de que hiciera falta
+# corregirlo ahí a posteriori.
+FastAPIInstrumentor.instrument_app(app, excluded_urls="/health,/metrics")
+
+app.mount("/metrics", make_asgi_app())
+
+challenges_created = meter.create_counter(
+    name="sport_challenges_created_total",
+    description="Retos creados",
+)
 
 
 @app.on_event("startup")
@@ -30,6 +59,7 @@ async def create_challenge(
     db.add(challenge)
     await db.commit()
     await db.refresh(challenge)
+    challenges_created.add(1)
     return challenge
 
 

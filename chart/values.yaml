@@ -27,6 +27,11 @@ ingress:
   # sport-api compartiendo un único Ingress fan-out).
   annotations: {}
 
+metrics:
+  # Ver car-api/chart/values.yaml — requiere kube-prometheus-stack (CRD
+  # ServiceMonitor) en el clúster.
+  enabled: true
+
 autoscaling:
   enabled: true
   minReplicas: 1
