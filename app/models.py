@@ -30,7 +30,9 @@ class Challenge(Base):
         Enum(ChallengeCategory, name="challenge_category"), nullable=False
     )
     status: Mapped[ChallengeStatus] = mapped_column(
-        Enum(ChallengeStatus, name="challenge_status"), nullable=False, default=ChallengeStatus.pending
+        Enum(ChallengeStatus, name="challenge_status"),
+        nullable=False,
+        default=ChallengeStatus.pending,
     )
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     location: Mapped[str | None] = mapped_column(String(200), nullable=True)
