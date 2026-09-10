@@ -6,6 +6,19 @@ ultras, montaña), cumplidos y pendientes, con récords personales.
 Stack: Python + FastAPI + SQLAlchemy (async) + PostgreSQL. Instrumentado con OpenTelemetry (métricas +
 trazas) desde el primer commit.
 
+Segundo microservicio de la plataforma, réplica deliberada del patrón de `car-api` (mismo Dockerfile, mismo
+chart de Helm, mismo pipeline) — sirvió para confirmar que el patrón se puede reutilizar de verdad en un
+dominio distinto sin tocar la plataforma compartida (Postgres, Vault, observabilidad), solo añadiendo las
+piezas propias del microservicio.
+
+## Modelo de datos
+
+Un único tipo, **`Challenge`**: un reto deportivo, con `category` (`race` / `mountain`) y `status`
+(`pending` / `completed`) independientes — un reto de montaña pendiente y una carrera ya conseguida se
+consultan igual, filtrando por el campo que toque. Incluye distancia, desnivel y resultado, todos
+opcionales (no todos los retos tienen los mismos datos: una ruta de montaña no tiene "resultado" en el
+sentido de una carrera cronometrada).
+
 ## Desarrollo local
 
 ```bash
